@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
@@ -11,46 +12,54 @@ class InstallScreen extends StatefulWidget {
 }
 
 class _InstallScreenState extends State<InstallScreen> {
-  bool isComplete = false;
+  final txtController = TextEditingController();
+  String installInfo = "";
 
-  Future<String> _installSystem() async {
-    String res = "";
-    await Process.run("bash", ["/etc/tuluos_installer/install.sh"], runInShell: true,)
-        .then((value) => res = value.stdout.toString());
-    print(res);
-    return res;
+  void _installSystem() async {
+    final process = await Process.start("bash", ["/etc/tuluos_installer/install.sh"]);
+
+    await process.stdout.transform(utf8.decoder).forEach(_changeStr);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _installSystem().then((value) {
-      // print(value);
-      if (value.contains("ok")) {
-        // print(value);
-        setState(() {
-          isComplete = true;
-        });
-      }
+  void _changeStr(String newInfo) {
+    setState(() {
+      installInfo += newInfo;
     });
   }
 
   @override
+  void dispose() {
+    txtController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _installSystem();
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Widget content = isComplete == false
-        ? Scaffold(
-            appBar: AppBar(
-              title: Text("Install Screen"),
-            ),
-            body: Text("Installing"),
-          )
-        : Scaffold(
-            appBar: AppBar(title: Text("Install Screen")),
-            body: Text("Finished"),
-            persistentFooterButtons: [
-              ElevatedButton(onPressed: () {}, child: Text("Finish"))
-            ],
-          );
-    return content;
+    txtController.text = installInfo;
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(
+              child: TextField(
+                maxLength: null,
+                maxLines: null,
+                decoration: const InputDecoration(enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black))),
+            controller: txtController,
+          ))
+        ],
+      ),
+      persistentFooterAlignment: AlignmentDirectional.bottomCenter,
+      persistentFooterButtons: [
+        ElevatedButton(onPressed: (){
+          exit(0);
+        }, child: const Text("Finish"))
+      ],
+    );
   }
 }
