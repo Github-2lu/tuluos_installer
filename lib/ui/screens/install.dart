@@ -50,6 +50,7 @@ class _InstallScreenState extends State<InstallScreen> {
                 maxLength: null,
                 maxLines: null,
                 decoration: const InputDecoration(enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.black))),
+                readOnly: true,
             controller: txtController,
           ))
         ],
